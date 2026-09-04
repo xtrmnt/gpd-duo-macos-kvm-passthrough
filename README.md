@@ -40,6 +40,78 @@ The macOS/OpenCore baseline used here was derived from
 contains original documentation and templates only; it does not redistribute
 that project's files.
 
+## Prerequisites checklist
+
+Validate these before creating or changing the VM. A green check against this
+list avoids most opaque boot, networking, and passthrough failures.
+
+### Firmware and hardware
+
+- [ ] AMD SVM/virtualization and IOMMU are enabled in the GPD Duo firmware.
+- [ ] **Resizable BAR is disabled.** This was required by the working
+  configuration documented here.
+- [ ] The host Radeon 890M remains available to CachyOS for its own display.
+- [ ] The eGPU is attached, powered, and visible as a separate PCI device
+  before the VM is started.
+- [ ] The eGPU graphics and audio functions are in usable IOMMU groups; neither
+  group contains a device that the host needs.
+- [ ] A recovery path is available: a host display/input device, SSH session,
+  or a second computer. Do not pass through the only host keyboard and mouse.
+
+### CachyOS host
+
+- [ ] KVM/QEMU, libvirt, OVMF/edk2 firmware, dnsmasq, and nftables support are
+  installed and functional.
+- [ ] The system libvirt connection works:
+
+  ```fish
+  sudo virsh -c qemu:///system list --all
+  ```
+
+- [ ] The OVMF files exist:
+
+  ```fish
+  test -f /usr/share/edk2/x64/OVMF_CODE.4m.fd
+  test -f /usr/share/edk2/x64/OVMF_VARS.4m.fd
+  ```
+
+- [ ] A writable per-VM VARS file is used. The system `OVMF_VARS.4m.fd` file is
+  a template, not VM state.
+- [ ] VFIO is included in the initramfs and the passthrough device IDs are
+  bound to `vfio-pci`; see [CachyOS boot and VFIO configuration](#cachyos-boot-and-vfio-configuration).
+- [ ] Host sleep is disabled or inhibited while the VM is running. An
+  unattended host suspend can leave a macOS guest in a confusing power state.
+
+### Storage safety
+
+- [ ] The initial installation uses a disposable qcow2 system disk, not a
+  physical host disk.
+- [ ] The host boot disk, personal files, and sample-library partitions remain
+  unattached until the base VM is stable and backed up.
+- [ ] The recovery image and OpenCore image are stored outside any physical
+  device planned for later passthrough.
+- [ ] A backup of the libvirt domain XML and the qcow2 image exists before
+  changing storage or PCI assignments.
+
+### Networking and remote access
+
+- [ ] The libvirt `default` NAT network exists, is active, and autostarts.
+- [ ] If UFW is enabled, DHCP, DNS, and forwarding from `virbr0` are permitted
+  before trying macOS Recovery.
+- [ ] The guest receives a DHCP address on `192.168.122.0/24` and resolves DNS.
+- [ ] Remote Management/Screen Sharing is enabled in macOS before virtual
+  graphics are removed, or a physical display is ready.
+
+### Display and USB
+
+- [ ] For the GPD Duo's upper panel, use the eGPU's DisplayPort output and a
+  bidirectional DP-to-USB-C cable that supports DP-to-USB-C display input.
+- [ ] Do not use the eGPU enclosure's host/upstream USB4 or OCuLink connector
+  as the panel's video source.
+- [ ] Pass through only dedicated external USB devices or receivers; built-in
+  camera, Bluetooth, fingerprint, keyboard, and trackpad should stay with the
+  host.
+
 ## Host prerequisites
 
 1. Enable AMD IOMMU in firmware and the host kernel.
