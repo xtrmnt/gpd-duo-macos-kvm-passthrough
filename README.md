@@ -48,6 +48,10 @@ RX 6600M exclusively for macOS.
 
 - Check Apple's current macOS license terms before using macOS in a virtual
   machine or on non-Apple hardware.
+- You are responsible for your own hardware, data, firmware, and configuration
+  choices. The repository author accepts no responsibility for damage, data
+  loss, downtime, or other consequences, and does not provide individual
+  troubleshooting or support.
 - Do not publish an Apple SMC `osk` value, SMBIOS serials, UUIDs, MAC
   addresses, generated ROM values, recovery images, or EFI binaries.
 - This guide does **not** pass through the host Radeon 890M, the host boot
@@ -67,6 +71,9 @@ list avoids most opaque boot, networking, and passthrough failures.
 
 ### Firmware and hardware
 
+- [ ] Update the GPD Duo BIOS to the latest stable version supplied by GPD
+  before beginning. Complete the firmware update on reliable power and retain
+  the vendor's recovery guidance.
 - [ ] AMD SVM/virtualization and IOMMU are enabled in the GPD Duo firmware.
 - [ ] **Resizable BAR is disabled.** This was required by the working
   configuration documented here.
