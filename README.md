@@ -70,6 +70,50 @@ For this machine, `65:00.0` is the Navi 23 graphics function and `65:00.1` is
 its audio function. Replace those addresses with the values from your own
 machine; PCI addresses are not portable.
 
+### CachyOS boot and VFIO configuration
+
+This working GPD Duo host uses a systemd-boot-style kernel command line in
+`/etc/kernel/cmdline`; it does not use `/etc/default/grub`. Its command line
+contains the normal CachyOS root and presentation options, with **no explicit**
+`amd_iommu=on`, `iommu=pt`, or `vfio-pci.ids=` arguments. IOMMU is enabled by
+firmware on this host, while the GPU binding is established before the normal
+graphics driver loads.
+
+Load the VFIO modules early through mkinitcpio:
+
+```text
+# /etc/mkinitcpio.conf
+MODULES=(vfio_pci vfio vfio_iommu_type1)
+```
+
+Bind both functions of the passthrough GPU by PCI vendor/device ID:
+
+```text
+# /etc/modprobe.d/vfio.conf
+# Tested RX 6600M graphics + HDMI/DP audio functions
+options vfio-pci ids=1002:73ff,1002:ab28
+```
+
+Those IDs are specific to the tested RX 6600M. Replace both IDs with the
+graphics and audio IDs reported by `lspci -nn` for any other GPU.
+
+After changing either file, rebuild every installed initramfs and reboot:
+
+```fish
+sudo mkinitcpio -P
+sudo reboot
+```
+
+After the reboot, confirm the intended state before starting the VM:
+
+```fish
+lsmod | rg '^vfio|^amdgpu'
+lspci -nnk -s 65:00.0 -s 65:00.1
+```
+
+The RX 6600M functions must show `Kernel driver in use: vfio-pci`; the GPD
+Duo's Radeon 890M must remain on `amdgpu`. Do not bind the 890M to VFIO.
+
 ## VM baseline
 
 Use the system libvirt connection (`qemu:///system`) and Q35/OVMF. On CachyOS,
