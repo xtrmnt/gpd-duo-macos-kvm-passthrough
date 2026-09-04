@@ -20,9 +20,29 @@ Apple keys, and deliberately omits machine-specific identifiers.
 | Guest chipset | Q35 |
 | Guest CPU | 12 vCPU, 1 socket x 12 cores x 1 thread |
 | Guest memory | 32 GiB |
+| eGPU | SGWZONE RX 6600 eGPU, connected to the GPD Duo over USB4 |
 | GPU | AMD Navi 23 / Radeon RX 6600M, plus its HDMI/DP-audio function |
 | Network | libvirt `default` NAT network, VMXNET3 |
 | Input | Direct USB passthrough for a wired Razer mouse and Dell keyboard |
+
+## Physical desktop layout
+
+The GPD Duo remains the CachyOS host. Its lower display is the CachyOS screen.
+The SGWZONE RX 6600 eGPU is connected through the GPD Duo's USB4 port, and its
+Radeon RX 6600M is passed through to the macOS VM. In the completed physical
+layout, the GPD Duo's upper display is the macOS screen: it receives the
+eGPU's DisplayPort output through a bidirectional DisplayPort-to-USB-C cable
+and its USB-C DisplayPort Alt Mode input.
+
+```text
+GPD Duo lower display  -> CachyOS host
+GPD Duo USB4 port      -> SGWZONE RX 6600 eGPU
+SGWZONE DisplayPort    -> GPD Duo upper-display USB-C video input
+GPD Duo upper display  -> macOS VM (RX 6600M passthrough)
+```
+
+This layout keeps the host iGPU available to CachyOS and reserves the external
+RX 6600M exclusively for macOS.
 
 ## Scope and important limits
 
@@ -329,6 +349,20 @@ Confirm all of the following before considering the configuration complete:
 - Guest networking has a DHCP lease and working DNS.
 - Keyboard and mouse work in macOS while a separate host input method remains
   available.
+
+## Planned enhancement: seamless input with Deskflow
+
+The current input arrangement uses direct USB passthrough for the external
+keyboard and mouse. A future improvement is to use
+[Deskflow](https://github.com/deskflow/deskflow) to share the GPD Duo's
+built-in keyboard and trackpad from CachyOS to macOS over the VM network.
+
+The intended experience is to move the pointer from the lower CachyOS display
+to the upper macOS display and continue typing without switching USB devices.
+Keep this as an optional post-install enhancement: it should be configured
+only after GPU output, networking, and Remote Management are stable. The
+built-in GPD input devices remain owned by CachyOS; Deskflow shares input at
+the desktop level rather than passing those devices through to the VM.
 
 ## Related references
 
