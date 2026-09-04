@@ -1,0 +1,13 @@
+# Local captures and host-specific VM exports
+*.xml.backup
+*-current.xml
+*-qemu-argv.txt
+*.log
+
+# Secrets and unique hardware identifiers
+*.nvram
+*.qcow2
+*.iso
+*.dmg
+*.img
+config.plist

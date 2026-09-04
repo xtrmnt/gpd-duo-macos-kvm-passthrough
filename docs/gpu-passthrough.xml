@@ -1,0 +1,28 @@
+<!--
+  Sanitized example only.
+  Add these entries inside the existing <devices> element while the VM is off.
+  Replace 65:00.0 and 65:00.1 with your GPU's graphics and audio PCI functions.
+  Do not add a second <devices> element.
+-->
+
+<video>
+  <model type='none'/>
+</video>
+
+<hostdev mode='subsystem' type='pci' managed='yes'>
+  <driver name='vfio'/>
+  <source>
+    <address domain='0x0000' bus='0x65' slot='0x00' function='0x0'/>
+  </source>
+  <address type='pci' domain='0x0000' bus='0x06' slot='0x00'
+           function='0x0' multifunction='on'/>
+</hostdev>
+
+<hostdev mode='subsystem' type='pci' managed='yes'>
+  <driver name='vfio'/>
+  <source>
+    <address domain='0x0000' bus='0x65' slot='0x00' function='0x1'/>
+  </source>
+  <address type='pci' domain='0x0000' bus='0x06' slot='0x00'
+           function='0x1'/>
+</hostdev>
