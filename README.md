@@ -43,11 +43,18 @@ that project's files.
 ## Host prerequisites
 
 1. Enable AMD IOMMU in firmware and the host kernel.
-2. Confirm that the eGPU graphics and audio functions are isolated from the
+2. Disable **Resizable BAR** (also shown as Re-Size BAR or Smart Access
+   Memory) in the GPD Duo firmware before attempting the GPU passthrough boot.
+   It was disabled in the working configuration documented here.
+3. Confirm that the eGPU graphics and audio functions are isolated from the
    host, then bind both to `vfio-pci`.
-3. Keep the GPD Duo's integrated Radeon 890M bound to the host `amdgpu`
+4. Keep the GPD Duo's integrated Radeon 890M bound to the host `amdgpu`
    driver. It is not the passthrough GPU.
-4. Confirm that the VM is shut off before adding the PCI devices.
+5. Confirm that the VM is shut off before adding the PCI devices.
+
+Resizable BAR and **Above 4G Decoding** are separate options. This guide only
+records the tested requirement to disable Resizable BAR; do not change Above
+4G Decoding solely on the basis of this note.
 
 Useful inspection commands:
 
