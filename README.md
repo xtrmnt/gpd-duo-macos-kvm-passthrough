@@ -387,6 +387,34 @@ The inhibitor lasts until reboot or until it is explicitly removed:
 sudo systemctl stop macos-vm-inhibit.service
 ```
 
+### Desktop-shutdown helper
+
+In this configuration, choosing **Apple menu -> Shut Down** can leave the
+libvirt domain reported as `running` even after macOS has been asked to exit.
+The host cannot safely infer the exact completion point from that menu action.
+
+The optional [scripts/macos-finish-shutdown](scripts/macos-finish-shutdown)
+helper is intended to be launched from CachyOS immediately after selecting the
+macOS desktop shutdown command. It waits for a configurable grace period, then
+calls `virsh destroy` only if the VM still reports `running`. It never deletes
+the VM or its disks, but `destroy` discards guest RAM, so it must not be used
+unless macOS shutdown was intentionally initiated first.
+
+Install it on the host:
+
+```fish
+sudo install -Dm755 scripts/macos-finish-shutdown /usr/local/sbin/macos-finish-shutdown
+```
+
+After choosing **Shut Down** in macOS, run:
+
+```fish
+sudo macos-finish-shutdown
+```
+
+The default grace period is 90 seconds. Pass a different number of seconds if
+needed, for example `sudo macos-finish-shutdown 120`.
+
 ## Verification checklist
 
 ```fish

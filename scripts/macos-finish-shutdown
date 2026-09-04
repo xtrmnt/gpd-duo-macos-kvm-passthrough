@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Run this from CachyOS immediately after choosing Apple menu -> Shut Down.
+# It gives macOS time to finish, then releases QEMU only if libvirt still
+# reports the domain as running.
+
+set -eu
+
+domain="macOS"
+grace_seconds="${1:-90}"
+
+state() {
+  virsh -c qemu:///system domstate "$domain" | tr -d '\r'
+}
+
+if [ "$(state)" = "shut off" ]; then
+  echo "$domain is already shut off."
+  exit 0
+fi
+
+echo "Waiting ${grace_seconds}s for macOS desktop shutdown..."
+waited=0
+while [ "$waited" -lt "$grace_seconds" ]; do
+  if [ "$(state)" = "shut off" ]; then
+    echo "$domain shut down cleanly."
+    systemctl stop macos-vm-inhibit.service 2>/dev/null || true
+    exit 0
+  fi
+  sleep 5
+  waited=$((waited + 5))
+done
+
+echo "macOS is still running after the grace period; releasing QEMU."
+virsh -c qemu:///system destroy "$domain"
+systemctl stop macos-vm-inhibit.service 2>/dev/null || true
+virsh -c qemu:///system domstate "$domain"
