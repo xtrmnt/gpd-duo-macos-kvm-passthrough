@@ -328,15 +328,64 @@ device numbers because they often change after reconnecting or rebooting.
 
 Prevent macOS from automatically sleeping while the VM has no physical display
 attached. A guest can enter `pmsuspended`, which is distinct from a normal
-libvirt pause. Try this first:
+libvirt pause.
+
+### Wake a sleeping guest from CachyOS
+
+Try the libvirt guest-wake request first:
 
 ```fish
 sudo virsh -c qemu:///system dompmwakeup macOS
+sudo virsh -c qemu:///system domstate macOS
 ```
 
 If libvirt reports `pmsuspended` but QEMU rejects the wake request, the state
-is inconsistent. A normal stop/start is the practical recovery; it discards
-the suspended RAM state but does not delete the VM or its disks.
+is inconsistent. The practical recovery is to discard the suspended RAM state
+and start a clean VM process:
+
+```fish
+sudo virsh -c qemu:///system destroy macOS
+sudo virsh -c qemu:///system start macOS
+```
+
+`destroy` does not delete the VM or its disks, but it is a forced stop and
+discards guest RAM. Use it only after the normal wake request fails.
+
+### Keep macOS awake
+
+In macOS Terminal, apply these settings once. They disable system sleep,
+display sleep, disk sleep, and automatic power-off for every macOS power
+profile:
+
+```bash
+sudo pmset -a sleep 0
+sudo pmset -a displaysleep 0
+sudo pmset -a disksleep 0
+sudo pmset -a autopoweroff 0
+sudo pmset -g custom
+```
+
+### Keep the CachyOS host awake
+
+Prevent the host from sleeping or responding to a lid-close event while the VM
+is running:
+
+```fish
+sudo systemd-run \
+  --unit=macos-vm-inhibit \
+  --property=Type=simple \
+  systemd-inhibit \
+  --what=sleep:handle-lid-switch \
+  --mode=block \
+  --why="macOS VM is running" \
+  sleep infinity
+```
+
+The inhibitor lasts until reboot or until it is explicitly removed:
+
+```fish
+sudo systemctl stop macos-vm-inhibit.service
+```
 
 ## Verification checklist
 
